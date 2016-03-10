@@ -29,6 +29,7 @@ typedef size_t chunk_id_type;
 class Allocator;
 
 class Pointer {
+friend class Allocator;
 private:
 	chunk_id_type chunk_id;
 	Allocator *alloc_obj;
@@ -46,10 +47,11 @@ private:
 	} ChunkType;
 
 	struct Chunk {
+		chunk_id_type id;
 		void *base;
 		size_t size;
 		ChunkType type;
-		Chunk(void *base, size_t size, ChunkType type): base(base), size(size), type(type) {}
+		Chunk(chunk_id_type id, void *base, size_t size, ChunkType type): id(id), base(base), size(size), type(type) {}
 	};
 
 	typedef std::list<Chunk>::iterator chunk_list_iterator;
@@ -59,9 +61,13 @@ private:
 	std::unordered_map<chunk_id_type, chunk_list_iterator> occupied_chunks_map;
 	std::unordered_map<chunk_id_type, chunk_list_iterator> empty_chunks_map;
 	std::queue<chunk_id_type> chunk_ids;
+	chunk_id_type next_not_assigned_id = 0;
 
 	void *get_pointer_from_chunk();
 	chunk_id_type get_new_chunk_id();
+
+	//we merge right into left and remove right
+	void merge_chunks(chunk_list_iterator &left, chunk_list_iterator &right);
 public:
     Allocator(void *base, size_t size);
     

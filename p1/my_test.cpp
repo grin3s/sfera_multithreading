@@ -27,7 +27,12 @@ int main(int argc, char **argv) {
 //	L.pop_front();
 //	std::cout << *it << std::endl;
 	char buf[20];
-	Allocator allocator(buf, 20);
-	auto p = allocator.alloc(10);
+	Allocator allocator(buf, 30);
+	auto p1 = allocator.alloc(5);
+	auto p2 = allocator.alloc(5);
+	auto p3 = allocator.alloc(5);
+	allocator.free(p1);
+	allocator.free(p2);
+	allocator.free(p3);
 	return 0;
 }
