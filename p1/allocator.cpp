@@ -44,7 +44,7 @@ Pointer Allocator::alloc(size_t N) {
 			occupied_chunks_map.insert({new_id, new_chunk_list_iterator});
 			auto empty_chunk_remaining_size = empty_chunk->size - N;
 			if (empty_chunk_remaining_size > 0) {
-				empty_chunk->base += N;
+				empty_chunk->base = (char *)empty_chunk->base + N;
 				empty_chunk->size -= N;
 			}
 			else {
@@ -78,7 +78,7 @@ void Allocator::realloc(Pointer &p, size_t N) {
 					p_list_iter->size = N;
 					if (right_new_size > 0) {
 						p_right->size = right_new_size;
-						p_right->base = p_list_iter->base + N;
+						p_right->base = (char *)p_list_iter->base + N;
 					}
 					else {
 						//we must remove this empty chunk
@@ -103,7 +103,7 @@ void Allocator::realloc(Pointer &p, size_t N) {
 				//shrink
 				auto new_empty_chunk_size = p_list_iter->size - N;
 				auto new_empty_chunk_id = get_new_chunk_id();
-				auto new_empty_chunk = Chunk(new_empty_chunk_id, p_list_iter->base + N, new_empty_chunk_size, CHUNK_EMPTY);
+				auto new_empty_chunk = Chunk(new_empty_chunk_id, (char *)p_list_iter->base + N, new_empty_chunk_size, CHUNK_EMPTY);
 				p_list_iter->size = N;
 				p_list_iter++;
 				auto new_empty_chunk_iter = chunk_list.insert(p_list_iter, new_empty_chunk);
@@ -171,12 +171,9 @@ void Allocator::defrag() {
 	while (chunk_iter != chunk_list.end()) {
 		if (chunk_iter->type == CHUNK_OCCUPIED) {
 			if (occupied_end != nullptr) {
-//				std::cout << "from " << buf << " to " << buf + buf_size << std::endl;
-//				std::cout << "copying..." << chunk_iter->base << " " << occupied_end << std::endl;
 				std::memcpy(occupied_end, chunk_iter->base, chunk_iter->size);
-//				std::cout << "copying successfull" << std::endl;
 				chunk_iter->base = occupied_end;
-				occupied_end += chunk_iter->size;
+				occupied_end = (char *)occupied_end + chunk_iter->size;
 			}
 			chunk_iter++;
 		}
@@ -192,7 +189,7 @@ void Allocator::defrag() {
 	}
 	if (empty_space > 0) {
 		auto new_id = get_new_chunk_id();
-		auto new_chunk = Chunk(new_id, buf + buf_size - empty_space, empty_space, CHUNK_EMPTY);
+		auto new_chunk = Chunk(new_id, (char *)buf + buf_size - empty_space, empty_space, CHUNK_EMPTY);
 		chunk_list.push_back(new_chunk);
 		empty_chunks_map.insert({new_id, --chunk_list.end()});
 	}
