@@ -29,18 +29,19 @@ typedef size_t chunk_id_type;
 class Allocator;
 
 class Pointer {
-friend class Allocator;
+	friend class Allocator;
 private:
 	chunk_id_type chunk_id = 0;
 	Allocator *alloc_obj = nullptr;
 public:
 	Pointer(){};
 	Pointer(chunk_id_type chunk_id, Allocator *alloc_obj): chunk_id(chunk_id), alloc_obj(alloc_obj) {}
+
     void *get() const;
 };
 
 class Allocator {
-friend class Pointer;
+	friend class Pointer;
 private:
 	typedef enum {
 		CHUNK_OCCUPIED,
@@ -56,8 +57,10 @@ private:
 	};
 
 	typedef std::list<Chunk>::iterator chunk_list_iterator;
+
 	size_t buf_size;
 	void *buf;
+
 	std::list<Chunk> chunk_list;
 	std::unordered_map<chunk_id_type, chunk_list_iterator> occupied_chunks_map;
 	std::unordered_map<chunk_id_type, chunk_list_iterator> empty_chunks_map;
