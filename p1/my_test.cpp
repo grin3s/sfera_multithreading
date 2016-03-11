@@ -31,8 +31,8 @@ int main(int argc, char **argv) {
 	auto p1 = allocator.alloc(5);
 	auto p2 = allocator.alloc(5);
 	auto p3 = allocator.alloc(5);
-	allocator.free(p1);
 	allocator.free(p2);
-	allocator.free(p3);
+	allocator.realloc(p3, 10);
+	allocator.defrag();
 	return 0;
 }

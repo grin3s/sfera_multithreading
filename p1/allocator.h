@@ -31,9 +31,10 @@ class Allocator;
 class Pointer {
 friend class Allocator;
 private:
-	chunk_id_type chunk_id;
-	Allocator *alloc_obj;
+	chunk_id_type chunk_id = 0;
+	Allocator *alloc_obj = nullptr;
 public:
+	Pointer(){};
 	Pointer(chunk_id_type chunk_id, Allocator *alloc_obj): chunk_id(chunk_id), alloc_obj(alloc_obj) {}
     void *get() const;
 };
@@ -63,7 +64,7 @@ private:
 	std::queue<chunk_id_type> chunk_ids;
 	chunk_id_type next_not_assigned_id = 0;
 
-	void *get_pointer_from_chunk();
+	void *get_pointer_from_chunk(chunk_id_type chunk_id);
 	chunk_id_type get_new_chunk_id();
 
 	//we merge right into left and remove right
