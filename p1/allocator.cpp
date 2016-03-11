@@ -2,8 +2,8 @@
 #include <cstring>
 
 Allocator::Allocator(void *base, size_t size):
-	buf(base),
-	buf_size(size)
+buf(base),
+buf_size(size)
 {
 	auto new_id = get_new_chunk_id();
 	chunk_list.push_back(Chunk(new_id, buf, buf_size, CHUNK_EMPTY));

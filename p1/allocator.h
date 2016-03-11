@@ -7,21 +7,21 @@
 #include <queue>
 
 enum class AllocErrorType {
-    InvalidFree,
-    NoMemory,
+	InvalidFree,
+	NoMemory,
 };
 
 class AllocError: std::runtime_error {
 private:
-    AllocErrorType type;
+	AllocErrorType type;
 
 public:
-    AllocError(AllocErrorType _type, std::string message):
-            runtime_error(message),
-            type(_type)
-    {}
+	AllocError(AllocErrorType _type, std::string message):
+		runtime_error(message),
+		type(_type)
+{}
 
-    AllocErrorType getType() const { return type; }
+	AllocErrorType getType() const { return type; }
 };
 
 typedef size_t chunk_id_type;
@@ -37,7 +37,7 @@ public:
 	Pointer(){};
 	Pointer(chunk_id_type chunk_id, Allocator *alloc_obj): chunk_id(chunk_id), alloc_obj(alloc_obj) {}
 
-    void *get() const;
+	void *get() const;
 };
 
 class Allocator {
@@ -73,13 +73,13 @@ private:
 	//we merge right into left and remove right
 	void merge_chunks(chunk_list_iterator &left, chunk_list_iterator &right);
 public:
-    Allocator(void *base, size_t size);
-    
-    Pointer alloc(size_t N);
-    void realloc(Pointer &p, size_t N);
-    void free(Pointer &p);
+	Allocator(void *base, size_t size);
 
-    void defrag();
-    std::string dump() { return ""; }
+	Pointer alloc(size_t N);
+	void realloc(Pointer &p, size_t N);
+	void free(Pointer &p);
+
+	void defrag();
+	std::string dump() { return ""; }
 };
 
