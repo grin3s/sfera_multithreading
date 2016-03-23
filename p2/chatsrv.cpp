@@ -10,6 +10,7 @@
 #include <system_error>
 #include <errno.h>
 #include <unistd.h>
+#include <vector>
 
 #define PORT 3100
 #define MAXEVENTS 64
@@ -40,6 +41,7 @@ int main(int argc, char **argv) {
 	struct epoll_event event;
 	struct epoll_event *events = nullptr;
 	char buf[MAX_MESSAGE_SIZE];
+	std::vector<int> clients;
 
 	try {
 		if ((listener_fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
@@ -113,6 +115,7 @@ int main(int argc, char **argv) {
 						if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, new_fd, &event) == -1) {
 							throw std::system_error(errno, std::system_category());
 						}
+						clients.push_back(new_fd);
 					}
 				}
 				else {
@@ -121,7 +124,7 @@ int main(int argc, char **argv) {
 					bool close_conn = false;
 					// reading one less, so that we
 					while (1) {
-						n_read = read(events[i].data.fd, buf, MAX_MESSAGE_SIZE - 1);
+						n_read = recv(events[i].data.fd, buf, MAX_MESSAGE_SIZE - 1, 0);
 						if (n_read == -1) {
 							if (errno != EAGAIN) {
 								close_conn = true;
@@ -133,6 +136,10 @@ int main(int argc, char **argv) {
 							// connection is closed
 							close_conn = true;
 							break;
+						}
+						write(1, buf, n_read);
+						for (auto client_fd = clients.begin(); client_fd < clients.end(); client_fd++) {
+							send(*client_fd, buf, n_read, MSG_NOSIGNAL);
 						}
 					}
 					if (close_conn) {
