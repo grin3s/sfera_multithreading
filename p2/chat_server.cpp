@@ -5,6 +5,7 @@
  *      Author: grin
  */
 #include "chat_server.h"
+#include <iostream>
 
 
 #define ERR_CHECK(f) if ((f) == -1) throw std::system_error(errno, std::system_category());
@@ -77,7 +78,7 @@ int ChatServer::run(short port) {
 					bool close_conn = false;
 					// reading one less, so that we
 					while (1) {
-						n_read = recv(events[i].data.fd, buf, MAX_MESSAGE_SIZE - 1, 0);
+						n_read = recv(events[i].data.fd, buf, BUF_SIZE, 0);
 						if (n_read == -1) {
 							if ((errno != EAGAIN) && (errno != EWOULDBLOCK)) {
 								close_conn = true;
@@ -91,9 +92,7 @@ int ChatServer::run(short port) {
 							break;
 						}
 						write(1, buf, n_read);
-						for (auto client_fd = clients.begin(); client_fd != clients.end(); client_fd++) {
-							ERR_CHECK(send(client_fd->first, buf, n_read, MSG_NOSIGNAL));
-						}
+						process_input_buffer(events[i].data.fd, n_read);
 					}
 					if (close_conn) {
 						clients.erase(events[i].data.fd);
@@ -137,6 +136,70 @@ int ChatServer::make_socket_non_blocking (int sfd) {
 	}
 
 	return 0;
+}
+
+void ChatServer::process_input_buffer(int sock_fd, int main_buf_len) {
+	//std::cout << "process_input_buffer" << std::endl;
+	ClientBuffer &client_buf = clients.find(sock_fd)->second;
+	int i = 0;
+	bool found = false;
+	//std::cout << "1 " << client_buf;
+
+	//find first message, we have to merge it with the one in the client buffer
+	auto first_len = client_buf.get_size();
+	while ((first_len < MAX_MESSAGE_SIZE) && (i < main_buf_len)) {
+		if (buf[i] == '\n') {
+			found = true;
+			break;
+		}
+		i++;
+		first_len++;
+	}
+	if (found) {
+		client_buf.append(buf, i + 1);
+		send_to_all(client_buf.get_data(), client_buf.get_size());
+		client_buf.flush();
+		i++;
+	}
+	else {
+		if (first_len == MAX_MESSAGE_SIZE) {
+			client_buf.append(buf, i - 1);
+			client_buf.append('\n');
+			send_to_all(client_buf.get_data(), client_buf.get_size());
+			client_buf.flush();
+			i--;
+		}
+	}
+
+	//std::cout << "2 " << client_buf;
+	auto j = main_buf_len - 1;
+	found = false;
+	while (j >= i) {
+		if (buf[j] == '\n') {
+			found = true;
+			break;
+		}
+		j--;
+	}
+
+	if (found) {
+		send_to_all(buf + i, j - i + 1);
+		j++;
+	}
+	else {
+		j = i;
+	}
+
+	if (j < main_buf_len) {
+		client_buf.append(buf + j, main_buf_len - j);
+	}
+	//std::cout << "3 " << client_buf;
+}
+
+void ChatServer::send_to_all(char *msg, int len) {
+	for (auto client_fd = clients.begin(); client_fd != clients.end(); client_fd++) {
+		ERR_CHECK(send(client_fd->first, msg, len, MSG_NOSIGNAL));
+	}
 }
 
 

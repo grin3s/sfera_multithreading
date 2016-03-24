@@ -21,10 +21,19 @@ char *ClientBuffer::get_data() {
 	return buf.data();
 }
 
-int ClientBuffer::get_size() {
+size_t ClientBuffer::get_size() {
 	return buf.size();
 }
 
+bool ClientBuffer::is_empty() {
+	return buf.empty();
+}
 
+std::ostream &operator<<(std::ostream &out, const ClientBuffer& client_buf) {
+	for (auto iter = client_buf.buf.begin(); iter != client_buf.buf.end(); iter++) {
+		out << *iter;
+	}
+	return out;
+}
 
 
