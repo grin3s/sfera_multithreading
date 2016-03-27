@@ -5,16 +5,21 @@
  *      Author: grin
  */
 #include "client_buffer.h"
+#include <iostream>
 
 void ClientBuffer::append(char *data, int n_chars) {
+//	std::cout << buf.capacity() << std::endl;
+//	std::cout << "inserting" << std::endl;
 	buf.insert(buf.end(), data, data + n_chars);
 }
 
 void ClientBuffer::append(char c) {
+//	std::cout << "pushing" << std::endl;
 	buf.push_back(c);
 }
 
 void ClientBuffer::flush() {
+//	std::cout << "flushing" << std::endl;
 	buf.clear();
 }
 char *ClientBuffer::get_data() {
@@ -35,5 +40,3 @@ std::ostream &operator<<(std::ostream &out, const ClientBuffer& client_buf) {
 	}
 	return out;
 }
-
-

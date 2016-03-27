@@ -6,6 +6,7 @@
  */
 #include "chat_server.h"
 #include <iostream>
+#include "chat_utils.h"
 
 
 #define ERR_CHECK(f) if ((f) == -1) throw std::system_error(errno, std::system_category());
@@ -19,15 +20,16 @@ int ChatServer::run(short port) {
 		my_addr.sin_port = htons(port);
 		my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+		int yes = 1;
+		ERR_CHECK(setsockopt(listener_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)));
+
 		ERR_CHECK(bind(listener_fd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)));
 
 		ERR_CHECK(make_socket_non_blocking(listener_fd));
 
 		ERR_CHECK(listen(listener_fd, SOMAXCONN));
 
-		int yes = 1;
 
-		ERR_CHECK(setsockopt(listener_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)));
 
 		ERR_CHECK(epoll_fd = epoll_create1(0));
 
@@ -119,23 +121,6 @@ void ChatServer::close_socket(int sock_fd) {
 	printf("connection terminated\n");
 	shutdown(sock_fd, SHUT_RDWR);
 	close(sock_fd);
-}
-
-int ChatServer::make_socket_non_blocking (int sfd) {
-	int flags, s;
-
-	if ((flags = fcntl (sfd, F_GETFL, 0)) == -1)
-	{
-		return -1;
-	}
-
-	flags |= O_NONBLOCK;
-	if ((s = fcntl (sfd, F_SETFL, flags)) == -1)
-	{
-		return -1;
-	}
-
-	return 0;
 }
 
 void ChatServer::process_input_buffer(int sock_fd, int main_buf_len) {

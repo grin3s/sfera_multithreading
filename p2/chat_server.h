@@ -23,7 +23,7 @@
 #include "client_buffer.h"
 
 #define MAXEVENTS 64
-#define MAX_MESSAGE_SIZE 5
+#define MAX_MESSAGE_SIZE 1024
 #define BUF_SIZE MAX_MESSAGE_SIZE
 
 class ChatServer {
@@ -36,7 +36,6 @@ class ChatServer {
 	std::unordered_map<int, ClientBuffer> clients;
 
 	void close_socket(int sock_fd);
-	int make_socket_non_blocking (int sfd);
 
 	void process_input_buffer(int sock_fd, int main_buf_len);
 	void send_to_all(char *msg, int len);
